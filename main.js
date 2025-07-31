@@ -1,17 +1,17 @@
-// Hilfsfunktion: Preise im Text finden (Bsp: 12.99 oder 3,50)
-function extractPrices(text) {
-  // Preise mit Punkt oder Komma als Dezimaltrennzeichen
-  const priceRegex = /(\d{1,4}[\.,]\d{2})/g;
-  const matches = text.match(priceRegex);
-  if (!matches) return [];
-  // Einheitlich als float mit Punkt speichern
-  return matches.map(p => parseFloat(p.replace(',', '.')));
-}
-
-// Hilfsfunktion: Datum heute in "YYYY-MM" format
-function getCurrentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() +1).padStart(2,'0')}`;
+// Funktion, um den Gesamtpreis aus dem Text gezielt zu finden
+function extractTotalPrice(text) {
+  // Suche Zeilen mit 'gesamt', 'summe', 'total' (case insensitive)
+  const lines = text.toLowerCase().split('\n');
+  for (const line of lines) {
+    if (line.includes('gesamt') || line.includes('summe') || line.includes('total')) {
+      // Suche Preis in der Zeile
+      const match = line.match(/(\d{1,4}[\.,]\d{2})/);
+      if (match) {
+        return parseFloat(match[1].replace(',', '.'));
+      }
+    }
+  }
+  return null;
 }
 
 // Speicher Key
@@ -90,13 +90,13 @@ saveEntryBtn.addEventListener('click', () => {
     return;
   }
 
-  const prices = extractPrices(text);
-  if (prices.length === 0) {
-    alert('Keine Preise gefunden. Bitte korrigiere den Text.');
+  const totalPrice = extractTotalPrice(text);
+  if (totalPrice === null) {
+    alert('Kein Gesamtpreis gefunden. Bitte prüfe den Text oder gib den Gesamtpreis manuell an.');
     return;
   }
 
-  // Eintrag erstellen mit Datum
+  // Eintrag erstellen mit Datum und Gesamtpreis
   const today = new Date();
   const monthKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
   if (!currentData[monthKey]) currentData[monthKey] = [];
@@ -104,17 +104,15 @@ saveEntryBtn.addEventListener('click', () => {
   currentData[monthKey].push({
     date: today.toISOString().slice(0,10),
     text,
-    prices
+    totalPrice
   });
 
   saveData(currentData);
   alert('Ausgabe gespeichert!');
 
-  // Anzeige Monatsübersicht aktualisieren
   showMonthsOverview();
   showSection(overviewSection);
 
-  // Reset Upload-Feld & Text
   imageUpload.value = '';
   textResult.value = '';
 });
@@ -131,9 +129,8 @@ function showMonthsOverview() {
   }
 
   months.forEach(month => {
-    // Summe der Preise im Monat berechnen
-    const allPrices = currentData[month].flatMap(e => e.prices);
-    const total = allPrices.reduce((a,b) => a+b, 0);
+    // Summe der Gesamtpreise im Monat berechnen
+    const total = currentData[month].reduce((sum, entry) => sum + entry.totalPrice, 0);
 
     const div = document.createElement('div');
     div.textContent = `${month} — Gesamt: ${total.toFixed(2)} €`;
@@ -149,11 +146,10 @@ function showMonthDetails(month) {
   selectedMonthSpan.textContent = month;
   monthEntriesList.innerHTML = '';
 
-  currentData[month].forEach((entry, i) => {
+  currentData[month].forEach((entry) => {
     const li = document.createElement('li');
-    // Zeige Datum, Text und Summe aller Preise im Eintrag
-    const sum = entry.prices.reduce((a,b) => a+b, 0);
-    li.textContent = `${entry.date}: ${sum.toFixed(2)} € — ${entry.text.replace(/\n/g,' ')}`;
+    // Zeige Datum, Gesamtpreis und Text (einzeilig)
+    li.textContent = `${entry.date}: ${entry.totalPrice.toFixed(2)} € — ${entry.text.replace(/\n/g,' ')}`;
     monthEntriesList.appendChild(li);
   });
 
