@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bon Checker</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <h1>Bon Checker</h1>
+
+  <section id="upload-section">
+    <label for="imageUpload">Foto vom Einkaufszettel hochladen:</label><br />
+    <input type="file" id="imageUpload" accept="image/*" />
+    <div id="loading" style="display:none;">📄 OCR läuft...</div>
+  </section>
+
+  <section id="ocr-result" style="display:none;">
+    <h2>Erkannter Text (bearbeiten & speichern):</h2>
+    <textarea id="textResult" rows="10"></textarea><br/>
+    <button id="saveEntry">Speichern</button>
+  </section>
+
+  <section id="overview" style="display:none;">
+    <h2>Monatsübersicht der Ausgaben</h2>
+    <div id="monthsList"></div>
+  </section>
+
+  <section id="details" style="display:none;">
+    <h3>Einzelne Ausgaben im Monat: <span id="selectedMonth"></span></h3>
+    <ul id="monthEntries"></ul>
+    <button id="backToMonths">Zurück zur Monatsübersicht</button>
+  </section>
+
+<script src="main.js"></script>
+</body>
+</html>
